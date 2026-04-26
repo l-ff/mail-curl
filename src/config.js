@@ -79,6 +79,11 @@ export function loadConfig() {
         baseUrl: process.env.TWENTY_FOUR_EMAIL_BASE_URL || "https://24.email",
         timeoutMs: toNumber(process.env.TWENTY_FOUR_EMAIL_TIMEOUT_MS, 15000),
       },
+      generatorEmail: {
+        enabled: process.env.GENERATOR_EMAIL_ENABLED === "1",
+        baseUrl: process.env.GENERATOR_EMAIL_BASE_URL || "https://generator.email",
+        timeoutMs: toNumber(process.env.GENERATOR_EMAIL_TIMEOUT_MS, 15000),
+      },
     },
   };
 }

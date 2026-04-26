@@ -10,6 +10,7 @@ import {
   sendJson,
 } from "./errors.js";
 import { createChatGptMailProvider } from "./providers/chatgpt-mail.js";
+import { GeneratorEmailProvider } from "./providers/generator-email.js";
 import { TwentyFourEmailProvider } from "./providers/twenty-four-email.js";
 
 function createProviders(config) {
@@ -22,6 +23,11 @@ function createProviders(config) {
 
   if (config.providers.twentyFourEmail.enabled) {
     const provider = new TwentyFourEmailProvider(config.providers.twentyFourEmail);
+    providers.set(provider.name, provider);
+  }
+
+  if (config.providers.generatorEmail.enabled) {
+    const provider = new GeneratorEmailProvider(config.providers.generatorEmail);
     providers.set(provider.name, provider);
   }
 

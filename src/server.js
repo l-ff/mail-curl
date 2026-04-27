@@ -11,6 +11,7 @@ import {
 } from "./errors.js";
 import { createChatGptMailProvider } from "./providers/chatgpt-mail.js";
 import { GeneratorEmailProvider } from "./providers/generator-email.js";
+import { PriyoEmailProvider } from "./providers/priyo-email.js";
 import { TwentyTwoDoProvider } from "./providers/twenty-two-do.js";
 import { TwentyFourEmailProvider } from "./providers/twenty-four-email.js";
 
@@ -34,6 +35,11 @@ function createProviders(config) {
 
   if (config.providers.twentyTwoDo.enabled) {
     const provider = new TwentyTwoDoProvider(config.providers.twentyTwoDo);
+    providers.set(provider.name, provider);
+  }
+
+  if (config.providers.priyoEmail.enabled) {
+    const provider = new PriyoEmailProvider(config.providers.priyoEmail);
     providers.set(provider.name, provider);
   }
 

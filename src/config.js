@@ -90,6 +90,11 @@ export function loadConfig() {
         timeoutMs: toNumber(process.env.TWENTY_TWO_DO_TIMEOUT_MS, 20000),
         language: process.env.TWENTY_TWO_DO_LANGUAGE || "en-US",
       },
+      priyoEmail: {
+        enabled: process.env.PRIYO_EMAIL_ENABLED === "1",
+        baseUrl: process.env.PRIYO_EMAIL_BASE_URL || "https://priyo.email",
+        timeoutMs: toNumber(process.env.PRIYO_EMAIL_TIMEOUT_MS, 20000),
+      },
     },
   };
 }

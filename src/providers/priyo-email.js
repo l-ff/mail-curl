@@ -304,7 +304,8 @@ export class PriyoEmailProvider {
     const cookieJar = new Map();
     const home = await this.#loadHome(cookieJar);
     await this.#changeMailbox(home.document, cookieJar, mailbox);
-    return (await this.#loadHome(cookieJar)).html;
+    const mailboxHome = await this.#loadHome(cookieJar);
+    return this.#fetchMailboxHtml(mailboxHome.document, cookieJar, mailboxHome.html);
   }
 
   async #loadHome(cookieJar) {
@@ -352,5 +353,31 @@ export class PriyoEmailProvider {
     if (syncedEmail !== mailbox.email) {
       throw new UpstreamError("Priyo mailbox change failed", { mailboxId: mailbox.email, response: data });
     }
+  }
+
+  async #fetchMailboxHtml(document, cookieJar, fallbackHtml) {
+    const response = await this.client.request("/livewire/update", {
+      method: "POST",
+      headers: {
+        ...JSON_HEADERS,
+        Origin: this.options.baseUrl,
+        Referer: `${this.options.baseUrl}/`,
+        Cookie: cookieHeader(cookieJar),
+      },
+      body: JSON.stringify({
+        _token: livewireToken(document),
+        components: [
+          {
+            snapshot: livewireComponent(document, "themes.components.inbox-message"),
+            updates: {},
+            calls: [{ method: "__dispatch", params: ["fetchMessages", {}], metadata: {} }],
+          },
+        ],
+      }),
+    });
+    mergeCookies(cookieJar, response);
+
+    const data = await response.json();
+    return data?.components?.[0]?.effects?.html || fallbackHtml;
   }
 }

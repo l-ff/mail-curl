@@ -20,10 +20,10 @@ Configuration is loaded in `src/config.js`. The loader reads `.env` and `.env.lo
 - `MC_KEY`: shared API key passed as the `key` query parameter, defaults to `sk-test`
 - `CHATGPT_MAIL_API_KEY`: enables the `chatgpt_mail` provider when present
 - `CHATGPT_MAIL_BASE_URL`: defaults to `https://mail.chatgpt.org.uk`
-- `CHATGPT_MAIL_TIMEOUT_MS`: defaults to `15000`
+- `CHATGPT_MAIL_TIMEOUT_MS`: defaults to `10000`
 - `TWENTY_FOUR_EMAIL_ENABLED=1`: enables the `twenty_four_email` provider
 - `TWENTY_FOUR_EMAIL_BASE_URL`: defaults to `https://24.email`
-- `TWENTY_FOUR_EMAIL_TIMEOUT_MS`: defaults to `15000`
+- `TWENTY_FOUR_EMAIL_TIMEOUT_MS`: defaults to `10000`
 
 ## Architecture
 

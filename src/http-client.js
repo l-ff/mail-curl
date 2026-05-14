@@ -1,7 +1,7 @@
 import { UpstreamError } from "./errors.js";
 
 export class HttpClient {
-  constructor({ baseUrl, timeoutMs = 15000, defaultHeaders = {} }) {
+  constructor({ baseUrl, timeoutMs = 10000, defaultHeaders = {} }) {
     this.baseUrl = baseUrl ? baseUrl.replace(/\/$/, "") : "";
     this.timeoutMs = timeoutMs;
     this.defaultHeaders = defaultHeaders;

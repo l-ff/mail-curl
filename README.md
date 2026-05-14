@@ -46,23 +46,23 @@ npm install
 | `MC_KEY` | `sk-test` | 调用业务接口时传入的共享 API key |
 | `CHATGPT_MAIL_API_KEY` | 空 | 设置后启用 `chatgpt_mail` provider |
 | `CHATGPT_MAIL_BASE_URL` | `https://mail.chatgpt.org.uk` | `chatgpt_mail` 上游地址 |
-| `CHATGPT_MAIL_TIMEOUT_MS` | `15000` | `chatgpt_mail` 请求超时时间 |
+| `CHATGPT_MAIL_TIMEOUT_MS` | `10000` | `chatgpt_mail` 请求超时时间 |
 | `TWENTY_FOUR_EMAIL_ENABLED` | 空 | 设置为 `1` 后启用 `twenty_four_email` provider |
 | `TWENTY_FOUR_EMAIL_BASE_URL` | `https://24.email` | `twenty_four_email` 上游地址 |
-| `TWENTY_FOUR_EMAIL_TIMEOUT_MS` | `15000` | `twenty_four_email` 请求超时时间 |
+| `TWENTY_FOUR_EMAIL_TIMEOUT_MS` | `10000` | `twenty_four_email` 请求超时时间 |
 | `GENERATOR_EMAIL_ENABLED` | 空 | 设置为 `1` 后启用 `generator_email` provider |
 | `GENERATOR_EMAIL_BASE_URL` | `https://generator.email` | `generator_email` 上游地址 |
-| `GENERATOR_EMAIL_TIMEOUT_MS` | `15000` | `generator_email` 请求超时时间 |
+| `GENERATOR_EMAIL_TIMEOUT_MS` | `10000` | `generator_email` 请求超时时间 |
 | `TEMP_MAIL_IO_ENABLED` | 空 | 设置为 `1` 后启用 `temp_mail_io` provider |
 | `TEMP_MAIL_IO_BASE_URL` | `https://api.internal.temp-mail.io` | `temp_mail_io` API 上游地址 |
 | `TEMP_MAIL_IO_SITE_URL` | `https://temp-mail.io` | `temp_mail_io` 页面来源地址，用于 Origin/Referer |
 | `TEMP_MAIL_IO_CORS_HEADER` | `1` | `temp_mail_io` 请求头 `X-CORS-Header` |
-| `TEMP_MAIL_IO_TIMEOUT_MS` | `15000` | `temp_mail_io` 请求超时时间 |
+| `TEMP_MAIL_IO_TIMEOUT_MS` | `10000` | `temp_mail_io` 请求超时时间 |
 | `MAIL_TM_ENABLED` | 空 | 设置为 `1` 后启用 `mail_tm` provider |
 | `MAIL_TM_BASE_URL` | `https://api.mail.tm` | `mail_tm` API 上游地址 |
 | `MAIL_TM_SITE_URL` | `https://mail.tm` | `mail_tm` 页面来源地址，用于 Origin/Referer |
 | `MAIL_TM_PASSWORD` | 空 | `mail_tm` 默认邮箱密码；为空时新建邮箱会生成随机密码并写入返回的 `id` |
-| `MAIL_TM_TIMEOUT_MS` | `15000` | `mail_tm` 请求超时时间 |
+| `MAIL_TM_TIMEOUT_MS` | `10000` | `mail_tm` 请求超时时间 |
 | `PRIYO_EMAIL_ENABLED` | 空 | 设置为 `1` 后启用 `priyo_email` provider |
 | `PRIYO_EMAIL_BASE_URL` | `https://priyo.email` | `priyo_email` 上游地址 |
 | `PRIYO_EMAIL_TIMEOUT_MS` | `20000` | `priyo_email` 请求超时时间 |

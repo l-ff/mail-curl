@@ -127,7 +127,7 @@ export class TwentyFourEmailProvider {
 
   async listInbox({ mailboxId }) {
     const email = assertEmail(mailboxId);
-    const emails = await readInbox(this.options.baseUrl, this.options.timeoutMs || 15000, email);
+    const emails = await readInbox(this.options.baseUrl, this.options.timeoutMs || 10000, email);
 
     return emails
       .filter((item) => item?.body)

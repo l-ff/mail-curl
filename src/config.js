@@ -91,6 +91,13 @@ export function loadConfig() {
         corsHeader: process.env.TEMP_MAIL_IO_CORS_HEADER || "1",
         timeoutMs: toNumber(process.env.TEMP_MAIL_IO_TIMEOUT_MS, 15000),
       },
+      mailTm: {
+        enabled: process.env.MAIL_TM_ENABLED === "1",
+        baseUrl: process.env.MAIL_TM_BASE_URL || "https://api.mail.tm",
+        siteUrl: process.env.MAIL_TM_SITE_URL || "https://mail.tm",
+        password: process.env.MAIL_TM_PASSWORD || "",
+        timeoutMs: toNumber(process.env.MAIL_TM_TIMEOUT_MS, 15000),
+      },
       priyoEmail: {
         enabled: process.env.PRIYO_EMAIL_ENABLED === "1",
         baseUrl: process.env.PRIYO_EMAIL_BASE_URL || "https://priyo.email",

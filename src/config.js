@@ -84,6 +84,13 @@ export function loadConfig() {
         baseUrl: process.env.GENERATOR_EMAIL_BASE_URL || "https://generator.email",
         timeoutMs: toNumber(process.env.GENERATOR_EMAIL_TIMEOUT_MS, 15000),
       },
+      tempMailIo: {
+        enabled: process.env.TEMP_MAIL_IO_ENABLED === "1",
+        baseUrl: process.env.TEMP_MAIL_IO_BASE_URL || "https://api.internal.temp-mail.io",
+        siteUrl: process.env.TEMP_MAIL_IO_SITE_URL || "https://temp-mail.io",
+        corsHeader: process.env.TEMP_MAIL_IO_CORS_HEADER || "1",
+        timeoutMs: toNumber(process.env.TEMP_MAIL_IO_TIMEOUT_MS, 15000),
+      },
       twentyTwoDo: {
         enabled: process.env.TWENTY_TWO_DO_ENABLED === "1",
         baseUrl: process.env.TWENTY_TWO_DO_BASE_URL || "https://22.do",

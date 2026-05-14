@@ -13,7 +13,6 @@ import { createChatGptMailProvider } from "./providers/chatgpt-mail.js";
 import { GeneratorEmailProvider } from "./providers/generator-email.js";
 import { PriyoEmailProvider } from "./providers/priyo-email.js";
 import { TempMailIoProvider } from "./providers/temp-mail-io.js";
-import { TwentyTwoDoProvider } from "./providers/twenty-two-do.js";
 import { TwentyFourEmailProvider } from "./providers/twenty-four-email.js";
 
 function createProviders(config) {
@@ -36,11 +35,6 @@ function createProviders(config) {
 
   if (config.providers.tempMailIo.enabled) {
     const provider = new TempMailIoProvider(config.providers.tempMailIo);
-    providers.set(provider.name, provider);
-  }
-
-  if (config.providers.twentyTwoDo.enabled) {
-    const provider = new TwentyTwoDoProvider(config.providers.twentyTwoDo);
     providers.set(provider.name, provider);
   }
 

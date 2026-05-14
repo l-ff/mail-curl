@@ -6,8 +6,7 @@ import { RandomUtils } from "../random-utils.js";
 const DEFAULT_HEADERS = {
   Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
   "Accept-Language": "en-US,en;q=0.9",
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+  "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
 };
 
 const JSON_HEADERS = {
@@ -17,92 +16,59 @@ const JSON_HEADERS = {
 };
 
 const FALLBACK_DOMAINS = [
-  "mailp.org",
-  "priyo-mail.com",
-  "priyomail.top",
-  "priyomail.in",
-  "kanonmail.com",
-  "lottery-sambad.site",
-  "priyomail.site",
-  "ytpremium.store",
-  "oky.ovh",
-  "priyomail.us",
-  "dpl.ovh",
-  "iplv.ovh",
-  "kpl.ovh",
-  "mpk.ovh",
-  "idf.ovh",
-  "frm.ovh",
-  "bdm.ovh",
-  "priyo.ovh",
-  "dv2.host",
-  "ukm.ovh",
-  "sgm.ovh",
-  "usm.ovh",
-  "oku.ovh",
-  "bpl.ovh",
-  "en.priyomail.ovh",
-  "en.priyomail.org",
-  "en.priyomail.nl",
-  "en.priyodown.com",
-  "en.priyo.edu.pl",
-  "en.kpl.ovh",
-  "en.iplv.ovh",
-  "en.dpl.ovh",
-  "en.bpltv.com",
-  "en.bpl.ovh",
-  "en.auth2fa.com",
-];
+  "mailp.org priyo-mail.com priyomail.top priyomail.in kanonmail.com lottery-sambad.site priyomail.site",
+  "ytpremium.store oky.ovh priyomail.us dpl.ovh iplv.ovh kpl.ovh mpk.ovh idf.ovh frm.ovh bdm.ovh",
+  "priyo.ovh dv2.host ukm.ovh sgm.ovh usm.ovh oku.ovh bpl.ovh en.priyomail.ovh en.priyomail.org",
+  "en.priyomail.nl en.priyodown.com en.priyo.edu.pl en.kpl.ovh en.iplv.ovh en.dpl.ovh en.bpltv.com en.bpl.ovh en.auth2fa.com",
+].join(" ").split(" ");
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DOMAIN_PATTERN = /^[a-z0-9.-]+\.[a-z0-9-]+$/i;
 const MAIL_ID_SEPARATOR = "::";
+const WIRE = {
+  changeAccount: "themes.components.change-account",
+  inbox: "themes.components.inbox-message",
+};
 
-function normalizeText(value) {
-  return (value || "").replace(/\s+/g, " ").trim();
-}
+const text = (value) => (value || "").replace(/\s+/g, " ").trim();
+const dom = (html) => new JSDOM(html || "").window.document;
+const call = (method, params = []) => ({ method, params, metadata: {} });
 
 function parseMailboxId(mailboxId) {
-  const email = normalizeText(mailboxId).toLowerCase();
+  const email = text(mailboxId).toLowerCase();
   const match = email.match(/^([a-z0-9_.-]+)@([a-z0-9.-]+\.[a-z0-9-]+)$/i);
   if (!match) {
     throw new UpstreamError("Invalid priyo_email mailbox id", { mailboxId });
   }
-
   return { email, username: match[1], domain: match[2] };
+}
+
+function parseMailId(id) {
+  const value = text(id);
+  const separatorIndex = value.lastIndexOf(MAIL_ID_SEPARATOR);
+  if (separatorIndex <= 0) {
+    throw new UpstreamError("Invalid priyo_email mail id", { id });
+  }
+
+  const mailbox = parseMailboxId(value.slice(0, separatorIndex));
+  const messageId = text(value.slice(separatorIndex + MAIL_ID_SEPARATOR.length));
+  if (!messageId) {
+    throw new UpstreamError("Invalid priyo_email mail id", { id });
+  }
+  return { mailbox, messageId };
 }
 
 function formatMailId(mailbox, messageId) {
   return `${mailbox.email}${MAIL_ID_SEPARATOR}${messageId}`;
 }
 
-function parseMailId(id) {
-  const value = normalizeText(id);
-  const separatorIndex = value.lastIndexOf(MAIL_ID_SEPARATOR);
-  if (separatorIndex > 0) {
-    const mailbox = parseMailboxId(value.slice(0, separatorIndex));
-    const messageId = normalizeText(value.slice(separatorIndex + MAIL_ID_SEPARATOR.length));
-    if (messageId) {
-      return { mailbox, messageId };
-    }
-  }
-
-  throw new UpstreamError("Invalid priyo_email mail id", { id });
-}
-
-function setCookieValues(headers) {
-  if (typeof headers.getSetCookie === "function") {
-    return headers.getSetCookie();
-  }
-
-  const value = headers.get("set-cookie");
-  return value ? value.split(/,(?=\s*[^;,=\s]+=[^;]+)/) : [];
-}
-
 function mergeCookies(cookieJar, response) {
-  for (const cookie of setCookieValues(response.headers)) {
-    const [pair] = cookie.split(";");
-    const separatorIndex = pair.indexOf("=");
+  const values = typeof response.headers.getSetCookie === "function"
+    ? response.headers.getSetCookie()
+    : (response.headers.get("set-cookie") || "").split(/,(?=\s*[^;,=\s]+=[^;]+)/);
+
+  for (const value of values) {
+    const [pair] = value.split(";");
+    const separatorIndex = pair?.indexOf("=") ?? -1;
     if (separatorIndex > 0) {
       cookieJar.set(pair.slice(0, separatorIndex).trim(), pair.slice(separatorIndex + 1).trim());
     }
@@ -113,14 +79,13 @@ function cookieHeader(cookieJar) {
   return [...cookieJar.entries()].map(([key, value]) => `${key}=${value}`).join("; ");
 }
 
-function livewireComponent(document, name) {
-  const element = [...document.querySelectorAll("*")].find((node) => node.getAttribute("wire:name") === name);
-  const snapshot = element?.getAttribute("wire:snapshot");
-
+function livewireSnapshot(document, name) {
+  const snapshot = [...document.querySelectorAll("*")]
+    .find((element) => element.getAttribute("wire:name") === name)
+    ?.getAttribute("wire:snapshot");
   if (!snapshot) {
     throw new UpstreamError("Priyo Livewire component not found", { name });
   }
-
   return snapshot;
 }
 
@@ -132,127 +97,87 @@ function livewireToken(document) {
   if (!token) {
     throw new UpstreamError("Priyo Livewire CSRF token not found");
   }
-
   return token;
 }
 
-function parseLivewireData(snapshot) {
-  try {
-    return JSON.parse(snapshot).data || {};
-  } catch {
-    return {};
-  }
-}
-
 function randomDomainsFromSnapshot(document) {
-  const data = parseLivewireData(livewireComponent(document, "themes.components.change-account"));
-  const domainTuples = Array.isArray(data.domains?.[0]) ? data.domains[0] : [];
-  const domains = domainTuples
-    .map((tuple) => tuple?.[0])
-    .filter((domain) => domain?.active_status && domain.status === "random" && DOMAIN_PATTERN.test(domain.domain))
-    .map((domain) => domain.domain);
+  try {
+    const data = JSON.parse(livewireSnapshot(document, WIRE.changeAccount)).data || {};
+    const domains = (Array.isArray(data.domains?.[0]) ? data.domains[0] : [])
+      .map((tuple) => tuple?.[0])
+      .filter((domain) => domain?.active_status && domain.status === "random" && DOMAIN_PATTERN.test(domain.domain))
+      .map((domain) => domain.domain);
 
-  return domains.length > 0 ? domains : FALLBACK_DOMAINS;
-}
-
-function parseSender(value) {
-  const sender = normalizeText(value);
-  const match = sender.match(/^(?:"?([^"]+)"?\s*)?<([^>]+)>$/);
-  return match
-    ? { name: normalizeText(match[1]), address: normalizeText(match[2]) }
-    : { name: sender, address: sender.includes("@") ? sender : "" };
-}
-
-function parseRawMessage(raw) {
-  const value = String(raw || "");
-  const separator = value.match(/\r?\n\r?\n/);
-  const headerText = separator ? value.slice(0, separator.index) : "";
-  const body = separator ? value.slice(separator.index + separator[0].length) : value;
-  const headers = {};
-
-  for (const line of headerText.split(/\r?\n/)) {
-    const match = line.match(/^([^:]+):\s*(.*)$/);
-    if (match) {
-      headers[match[1].toLowerCase()] = match[2];
-    }
+    return domains.length > 0 ? domains : FALLBACK_DOMAINS;
+  } catch {
+    return FALLBACK_DOMAINS;
   }
-
-  return {
-    subject: normalizeText(headers.subject),
-    from: parseSender(headers.from),
-    html: body,
-  };
 }
 
-function bodyContent(html) {
-  const document = new JSDOM(html || "").window.document;
-  document.querySelectorAll("script, style").forEach((element) => element.remove());
-
-  return {
-    content: normalizeText(document.body?.textContent || document.documentElement.textContent),
-    html: document.body?.innerHTML || html || "",
-  };
-}
-
-function detailTime(document, messageId) {
+function detailTime(document, messageId, row) {
   const detail = document.getElementById(`message-${messageId}`);
-  const candidates = [...(detail?.querySelectorAll(".text-base") || [])].map((element) => normalizeText(element.textContent));
-  return candidates.find(Boolean) || null;
+  return text(detail?.querySelector(".text-base")?.textContent) || text(row?.querySelector("span")?.textContent) || null;
 }
 
-function messageContentSource(document, messageId) {
+function messageSource(document, messageId) {
   const content = document.getElementById(`content-${messageId}`);
   const iframe = content?.matches?.("iframe") ? content : content?.querySelector?.("iframe");
+  return iframe?.getAttribute("srcdoc") || content?.value || content?.innerHTML || "";
+}
 
-  return iframe?.getAttribute("srcdoc") || content?.value || "";
+function cleanBody(html) {
+  const document = dom(html);
+  document.querySelectorAll("script, style").forEach((element) => element.remove());
+  return {
+    subject: text(document.title),
+    content: text(document.body?.textContent || document.documentElement?.textContent),
+  };
 }
 
 function parseInbox(html, mailbox) {
-  const document = new JSDOM(html).window.document;
-  const items = [];
+  const document = dom(html);
   const seen = new Set();
 
-  for (const row of document.querySelectorAll(".inbox-list[data-id]")) {
+  return [...document.querySelectorAll(".inbox-list[data-id]")].flatMap((row) => {
     const messageId = row.getAttribute("data-id");
     if (!messageId || seen.has(messageId)) {
-      continue;
+      return [];
     }
 
     seen.add(messageId);
-    const raw = messageContentSource(document, messageId);
-    const parsed = parseRawMessage(raw);
-
-    items.push({
+    const body = cleanBody(messageSource(document, messageId));
+    return [{
       mail_id: formatMailId(mailbox, messageId),
-      sender_name: normalizeText(row.querySelector("h2")?.textContent) || parsed.from.name || parsed.from.address,
-      subject: normalizeText(row.querySelector("p")?.textContent) || parsed.subject,
-      received_at: detailTime(document, messageId) || normalizeText(row.querySelector("span")?.textContent) || null,
-    });
-  }
-
-  return items;
+      sender_name: text(row.querySelector("h2")?.textContent),
+      subject: text(row.querySelector("p")?.textContent) || body.subject,
+      received_at: detailTime(document, messageId, row),
+    }];
+  });
 }
 
 function parseDetail(html, mailbox, messageId) {
-  const document = new JSDOM(html).window.document;
-  const raw = messageContentSource(document, messageId);
+  const document = dom(html);
+  const raw = messageSource(document, messageId);
   if (!raw) {
     throw new UpstreamError("Priyo message was not found", { messageId, mailboxId: mailbox.email });
   }
-  // const parsed = parseRawMessage(raw);
-  // const body = bodyContent(parsed.html);
 
-  const document2 = new JSDOM(raw).window.document;
-  document2.querySelectorAll("script, style").forEach((el) => el.remove());
-
+  const body = cleanBody(raw);
   return {
     id: formatMailId(mailbox, messageId),
-    subject: document2.title || "",
-    content: document2.body.textContent.replace(/\s+/g, " ").trim() || "",
-    html: "",//raw,
-    from: "",//parsed.from,
+    subject: body.subject,
+    content: body.content,
+    html: "",
+    from: "",
     received_at: detailTime(document, messageId),
   };
+}
+
+function dispatchedEmail(data) {
+  return data?.components
+    ?.flatMap((component) => component.effects?.dispatches || [])
+    .find((dispatch) => dispatch.name === "syncEmail")
+    ?.params?.email;
 }
 
 export class PriyoEmailProvider {
@@ -276,8 +201,8 @@ export class PriyoEmailProvider {
   }
 
   async createMailbox() {
-    const session = await this.#loadHome(new Map());
-    const domains = randomDomainsFromSnapshot(session.document);
+    const page = await this.#loadHome(new Map());
+    const domains = randomDomainsFromSnapshot(page.document);
     const domain = domains[RandomUtils.intBetween(0, domains.length - 1)];
     const email = `${RandomUtils.letters(8)}${RandomUtils.digits(4)}@${domain}`;
 
@@ -290,22 +215,35 @@ export class PriyoEmailProvider {
 
   async listInbox({ mailboxId }) {
     const mailbox = parseMailboxId(mailboxId);
-    const html = await this.#loadMailbox(mailbox);
-    return parseInbox(html, mailbox);
+    return parseInbox(await this.#loadMailbox(mailbox), mailbox);
   }
 
   async getMail({ id }) {
     const { mailbox, messageId } = parseMailId(id);
-    const html = await this.#loadMailbox(mailbox);
-    return parseDetail(html, mailbox, messageId);
+    return parseDetail(await this.#loadMailbox(mailbox), mailbox, messageId);
   }
 
   async #loadMailbox(mailbox) {
     const cookieJar = new Map();
     const home = await this.#loadHome(cookieJar);
-    await this.#changeMailbox(home.document, cookieJar, mailbox);
+    const changed = await this.#livewire(home.document, cookieJar, WIRE.changeAccount, {
+      updates: {
+        username: mailbox.username,
+        domain: mailbox.domain,
+      },
+      calls: [call("changeEmailAddress")],
+    });
+
+    if (dispatchedEmail(changed) !== mailbox.email) {
+      throw new UpstreamError("Priyo mailbox change failed", { mailboxId: mailbox.email, response: changed });
+    }
+
     const mailboxHome = await this.#loadHome(cookieJar);
-    return this.#fetchMailboxHtml(mailboxHome.document, cookieJar, mailboxHome.html);
+    const inbox = await this.#livewire(mailboxHome.document, cookieJar, WIRE.inbox, {
+      calls: [call("__dispatch", ["fetchMessages", {}])],
+    });
+
+    return inbox?.components?.[0]?.effects?.html || mailboxHome.html;
   }
 
   async #loadHome(cookieJar) {
@@ -318,11 +256,11 @@ export class PriyoEmailProvider {
     const html = await response.text();
     return {
       html,
-      document: new JSDOM(html).window.document,
+      document: dom(html),
     };
   }
 
-  async #changeMailbox(document, cookieJar, mailbox) {
+  async #livewire(document, cookieJar, name, { updates = {}, calls = [] }) {
     const response = await this.client.request("/livewire/update", {
       method: "POST",
       headers: {
@@ -335,49 +273,14 @@ export class PriyoEmailProvider {
         _token: livewireToken(document),
         components: [
           {
-            snapshot: livewireComponent(document, "themes.components.change-account"),
-            updates: {
-              username: mailbox.username,
-              domain: mailbox.domain,
-            },
-            calls: [{ method: "changeEmailAddress", params: [], metadata: {} }],
+            snapshot: livewireSnapshot(document, name),
+            updates,
+            calls,
           },
         ],
       }),
     });
     mergeCookies(cookieJar, response);
-
-    const data = await response.json();
-    const dispatches = data?.components?.flatMap((component) => component.effects?.dispatches || []) || [];
-    const syncedEmail = dispatches.find((dispatch) => dispatch.name === "syncEmail")?.params?.email;
-    if (syncedEmail !== mailbox.email) {
-      throw new UpstreamError("Priyo mailbox change failed", { mailboxId: mailbox.email, response: data });
-    }
-  }
-
-  async #fetchMailboxHtml(document, cookieJar, fallbackHtml) {
-    const response = await this.client.request("/livewire/update", {
-      method: "POST",
-      headers: {
-        ...JSON_HEADERS,
-        Origin: this.options.baseUrl,
-        Referer: `${this.options.baseUrl}/`,
-        Cookie: cookieHeader(cookieJar),
-      },
-      body: JSON.stringify({
-        _token: livewireToken(document),
-        components: [
-          {
-            snapshot: livewireComponent(document, "themes.components.inbox-message"),
-            updates: {},
-            calls: [{ method: "__dispatch", params: ["fetchMessages", {}], metadata: {} }],
-          },
-        ],
-      }),
-    });
-    mergeCookies(cookieJar, response);
-
-    const data = await response.json();
-    return data?.components?.[0]?.effects?.html || fallbackHtml;
+    return response.json();
   }
 }

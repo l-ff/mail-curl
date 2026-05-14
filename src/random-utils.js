@@ -1,7 +1,9 @@
 import crypto from "crypto";
 
+const SYMBOLS = ".-_";
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 const DIGITS = "0123456789";
+const LETTERS_AND_DIGITS = LETTERS + DIGITS;
 
 function assertLength(length) {
   if (!Number.isInteger(length) || length <= 0) {
@@ -33,12 +35,20 @@ function randomFromCharset(length, charset) {
 }
 
 export class RandomUtils {
+  static symbols() {
+    return randomFromCharset(1, SYMBOLS);
+  }
+
   static letters(length) {
     return randomFromCharset(length, LETTERS);
   }
 
   static digits(length) {
     return randomFromCharset(length, DIGITS);
+  }
+
+  static lettersAndDigits(length) {
+    return randomFromCharset(length, LETTERS_AND_DIGITS);
   }
 
   static intBetween(min, max) {

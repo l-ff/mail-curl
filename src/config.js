@@ -1,47 +1,22 @@
 import fs from "fs";
 import path from "path";
+import dotenv from "dotenv";
 
 const toNumber = (value, fallback) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
-function stripWrappingQuotes(value) {
-  if (
-    (value.startsWith("\"") && value.endsWith("\"")) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  ) {
-    return value.slice(1, -1);
-  }
-  return value;
-}
-
-function parseDotEnv(content) {
-  const entries = {};
-
-  for (const rawLine of content.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#")) {
-      continue;
-    }
-
-    const separatorIndex = line.indexOf("=");
-    if (separatorIndex === -1) {
-      continue;
-    }
-
-    const key = line.slice(0, separatorIndex).trim();
-    const value = stripWrappingQuotes(line.slice(separatorIndex + 1).trim());
-    if (key) {
-      entries[key] = value;
-    }
+const isEnabled = (value, fallback = true) => {
+  if (value === undefined) {
+    return fallback;
   }
 
-  return entries;
-}
+  return !["0", "false", "no", "off"].includes(value.trim().toLowerCase());
+};
 
 export function loadEnvFiles(cwd = process.cwd()) {
-  const protectedKeys = new Set(Object.keys(process.env));
+  const parsedEnv = {};
 
   for (const filename of [".env", ".env.local"]) {
     const filePath = path.join(cwd, filename);
@@ -49,13 +24,11 @@ export function loadEnvFiles(cwd = process.cwd()) {
       continue;
     }
 
-    const parsed = parseDotEnv(fs.readFileSync(filePath, "utf8"));
-    for (const [key, value] of Object.entries(parsed)) {
-      if (!protectedKeys.has(key)) {
-        process.env[key] = value;
-      }
-    }
+    const parsed = dotenv.parse(fs.readFileSync(filePath, "utf8"));
+    dotenv.populate(parsedEnv, parsed, { override: true });
   }
+
+  dotenv.populate(process.env, parsedEnv);
 }
 
 export function loadConfig() {
@@ -69,37 +42,38 @@ export function loadConfig() {
     },
     providers: {
       chatgptMail: {
-        enabled: Boolean(process.env.CHATGPT_MAIL_API_KEY),
+        enabled:
+          Boolean(process.env.CHATGPT_MAIL_API_KEY) && isEnabled(process.env.CHATGPT_MAIL_ENABLED),
         baseUrl: process.env.CHATGPT_MAIL_BASE_URL || "https://mail.chatgpt.org.uk",
         apiKey: process.env.CHATGPT_MAIL_API_KEY || "",
         timeoutMs: toNumber(process.env.CHATGPT_MAIL_TIMEOUT_MS, 10000),
       },
       twentyFourEmail: {
-        enabled: process.env.TWENTY_FOUR_EMAIL_ENABLED === "1",
+        enabled: isEnabled(process.env.TWENTY_FOUR_EMAIL_ENABLED),
         baseUrl: process.env.TWENTY_FOUR_EMAIL_BASE_URL || "https://24.email",
         timeoutMs: toNumber(process.env.TWENTY_FOUR_EMAIL_TIMEOUT_MS, 10000),
       },
       generatorEmail: {
-        enabled: process.env.GENERATOR_EMAIL_ENABLED === "1",
+        enabled: isEnabled(process.env.GENERATOR_EMAIL_ENABLED),
         baseUrl: process.env.GENERATOR_EMAIL_BASE_URL || "https://generator.email",
         timeoutMs: toNumber(process.env.GENERATOR_EMAIL_TIMEOUT_MS, 10000),
       },
       tempMailIo: {
-        enabled: process.env.TEMP_MAIL_IO_ENABLED === "1",
+        enabled: isEnabled(process.env.TEMP_MAIL_IO_ENABLED),
         baseUrl: process.env.TEMP_MAIL_IO_BASE_URL || "https://api.internal.temp-mail.io",
         siteUrl: process.env.TEMP_MAIL_IO_SITE_URL || "https://temp-mail.io",
         corsHeader: process.env.TEMP_MAIL_IO_CORS_HEADER || "1",
         timeoutMs: toNumber(process.env.TEMP_MAIL_IO_TIMEOUT_MS, 10000),
       },
       mailTm: {
-        enabled: process.env.MAIL_TM_ENABLED === "1",
+        enabled: isEnabled(process.env.MAIL_TM_ENABLED),
         baseUrl: process.env.MAIL_TM_BASE_URL || "https://api.mail.tm",
         siteUrl: process.env.MAIL_TM_SITE_URL || "https://mail.tm",
         password: process.env.MAIL_TM_PASSWORD || "",
         timeoutMs: toNumber(process.env.MAIL_TM_TIMEOUT_MS, 10000),
       },
       priyoEmail: {
-        enabled: process.env.PRIYO_EMAIL_ENABLED === "1",
+        enabled: isEnabled(process.env.PRIYO_EMAIL_ENABLED),
         baseUrl: process.env.PRIYO_EMAIL_BASE_URL || "https://priyo.email",
         timeoutMs: toNumber(process.env.PRIYO_EMAIL_TIMEOUT_MS, 20000),
       },

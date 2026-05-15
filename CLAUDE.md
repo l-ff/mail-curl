@@ -13,15 +13,16 @@ There are currently no `test`, `lint`, or `build` scripts in `package.json`.
 
 ## Runtime configuration
 
-Configuration is loaded in `src/config.js`. The loader reads `.env` and `.env.local`, but it does not override keys already present in `process.env`.
+Configuration is loaded in `src/config.js`. The loader uses `dotenv` to read `.env` and `.env.local`, but it does not override keys already present in `process.env`.
 
 - `PORT`: HTTP port, defaults to `3100`
 - `HOST`: bind host, defaults to `::`; the Docker runtime sets it to `0.0.0.0`
 - `MC_KEY`: shared API key passed as the `key` query parameter, defaults to `sk-test`
 - `CHATGPT_MAIL_API_KEY`: enables the `chatgpt_mail` provider when present
+- `CHATGPT_MAIL_ENABLED`: defaults to enabled when `CHATGPT_MAIL_API_KEY` is present; set to `0` to disable
 - `CHATGPT_MAIL_BASE_URL`: defaults to `https://mail.chatgpt.org.uk`
 - `CHATGPT_MAIL_TIMEOUT_MS`: defaults to `10000`
-- `TWENTY_FOUR_EMAIL_ENABLED=1`: enables the `twenty_four_email` provider
+- `TWENTY_FOUR_EMAIL_ENABLED`: defaults to enabled; set to `0` to disable the `twenty_four_email` provider
 - `TWENTY_FOUR_EMAIL_BASE_URL`: defaults to `https://24.email`
 - `TWENTY_FOUR_EMAIL_TIMEOUT_MS`: defaults to `10000`
 
